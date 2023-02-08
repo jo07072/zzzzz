@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Absen bang</title>
+  </head>
+  <body>
+    <form action="#" id="form">
+      <input type="number" placeholder="nim" id="nim" />
+      <input type="file" name="file" id="file" />
+      <input type="submit" value="submit">
+    </form>
+
+    <div id="reader"></div>
+    <p id="status"></p>
+
+    <script
+      src="https://unpkg.com/html5-qrcode"
+      type="text/javascript"
+    ></script>
+    <script>
+      const formData = new FormData();
+      const form = document.getElementById("form");
+      const fileInput = document.getElementById("file");
+      const nimInput = document.getElementById("nim");
+      const status = document.getElementById("status");
+      const html5QrCode = new Html5Qrcode("reader")
+
+      window.addEventListener("paste", (e) => {
+        fileInput.files = e.clipboardData.files;
+
+        html5QrCode
+          .scanFile(fileInput.files[0], true)
+          .then((decodedText) => {
+            status.innerText = decodedText;
+          })
+          .catch((err) => {
+            status.innerText = err;
+          });
+      });
+
+      let data = status.innerText.split("-")
+
+      formData.append("kode_kelas", data[0]);
+      formData.append("kode_pertemuan", data[1]);
+      formData.append("token", data[2]);
+      formData.append("nim", nimInput.value);
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        fetch("https://api.itera.ac.id/v1/pocket/mahasiswa/kirimAbsensi", {
+        method: "POST",
+        mode: 'no-cors',
+        referrerPolicy: 'no-referrer',
+        headers: {
+            "Content-type": "application/x-www-form-urlencoded",
+            "Origin": "api.itera.ac.id",
+            "Referer": "api.itera.ac.id",
+            "X-test": "Helo",
+            "Access-Control-Allow-Origin": "*"
+        },
+        body: formData,
+      })
+        .then((response) => {
+            status.innerText = response.toString()
+        })
+        .then((result) => {
+            status.innerText = result;
+        })
+        .catch((error) => {
+            status.innerText = error;
+        });
+      })
+    </script>
+  </body>
+</html>
